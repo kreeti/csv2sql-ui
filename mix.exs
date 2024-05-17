@@ -4,14 +4,14 @@ defmodule Dashboard.MixProject do
   def project do
     [
       app: :dashboard,
-      version: "0.1.1",
+      version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.7",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -37,29 +37,35 @@ defmodule Dashboard.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.6"},
-      {:phoenix_live_view, "~> 0.17.5"},
-      {:floki, "~> 0.32.0", only: :test},
-      {:phoenix_html, "~> 3.1"},
-      {:phoenix_live_reload, "~> 1.3", only: :dev},
-      {:telemetry_poller, "~> 0.4"},
-      {:gettext, "~> 0.11"},
+      {:phoenix, "~> 1.7"},
+      {:phoenix_html, "~> 3.0"},
+      {:phoenix_view, "~> 2.0"},
+      {:phoenix_live_view, "~> 0.20.2"},
+      {:telemetry_metrics, "~> 1.0"},
+      {:telemetry_poller, "~> 1.1.0"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:cachex, "~> 3.3"},
-      {:csv2sql, in_umbrella: true}
+      {:ecto, "~> 3.11.2"},
+      {:phoenix_ecto, "~> 4.4"},
+      {:csv2sql, in_umbrella: true},
+      {:nanoid, "~> 2.1.0"},
+
+      # Development Deps
+      {:phoenix_live_reload, "~> 1.5.3", only: :dev},
+      {:dart_sass, "~> 0.2", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.8.1", runtime: Mix.env() == :dev},
+      {:floki, ">= 0.36.1", only: :test}
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to install project dependencies and perform other setup tasks, run:
-  #
-  #     $ mix setup
-  #
-  # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "cmd npm install --prefix assets"]
+      setup: ["deps.get"],
+      "assets.deploy": [
+        "esbuild default --minify",
+        "sass default --no-source-map --style=compressed",
+        "phx.digest"
+      ]
     ]
   end
 end

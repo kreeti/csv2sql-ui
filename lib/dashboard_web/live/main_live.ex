@@ -1,145 +1,327 @@
-defmodule DashboardWeb.MainLive do
+defmodule DashboardWeb.Live.MainLive do
   use DashboardWeb, :live_view
+  import Dashboard.Helpers
+  alias DashBoard.Config
+  alias DashBoard.DbAttribute
+  alias Csv2sql.Database.ConnectionTest
+  alias DashboardWeb.Live.{ConfigLive, StartLive, AboutLive}
 
-  alias DashboardWeb.Helper.ConfigHelper
+  @debounce_time 1000
 
   @impl true
   def mount(_params, _session, socket) do
+    local_storage_config = (get_connect_params(socket) || %{}) |> Map.get("localConfig", %{})
+
+    local_storage_config =
+      for {key, val} <- local_storage_config, into: %{}, do: {String.to_atom(key), val}
+
+    # Check for DB connection on config load from local storage
+    timer_ref = Process.send_after(self(), :check_db_connection, @debounce_time)
+
     {:ok,
      assign(socket,
-       file_list: [],
-       stage: :waiting,
-       validation_status: nil,
-       timer_set: nil,
-       stats: %{
-         active_workers: 0,
-         worker_count: 0,
-         db_worker_count: 0,
-         cpu_usage: 0,
-         memory_usage: 0,
-         time_spend: 0
-       }
+       page: "config",
+       modal: false,
+       path_validator_debouncer: nil,
+       db_connection_debouncer: timer_ref,
+       db_connection_established: false,
+       changeset: Config.get_defaults() |> Map.merge(local_storage_config) |> Config.changeset(),
+       matching_date_time: nil,
+       constraints: Csv2sql.Config.Loader.get_constraints(),
+       time_spend: 0,
+       state: %Csv2sql.ProgressTracker.State{
+         status: :init,
+         start_time: nil,
+         validation_status: nil
+       },
+       memory_usage: 0,
+       cpu_usage: 0
      )}
   end
 
   @impl true
-  def handle_event(
-        "start",
-        _,
-        %{assigns: assigns} = socket
-      ) do
-    new_stage =
-      case assigns.stage do
-        :waiting ->
-          ConfigHelper.get_to_config_arg() |> Csv2sql.main()
-          send(self(), :tick)
+  def handle_event("start", _unsigned_params, %{assigns: assigns} = socket) do
+    socket_state = assigns.state
 
-          :loading_files
+    cond do
+      assigns.changeset.valid? and socket_state.status == :init ->
+        Csv2sql.ProgressTracker.add_subscriber()
 
-        stage when stage in [:finish, :error] ->
-          :reset
+        Task.start(fn ->
+          socket.assigns.changeset
+          |> prepare_args()
+          |> Csv2sql.Config.Loader.load()
 
-        # Do nothing when :loading_files, :working, :validation
-        stage ->
-          stage
-      end
+          Csv2sql.Stages.Analyze.analyze_files()
+        end)
 
-    if new_stage == :reset,
-      do:
+        send(self(), :update_state)
+
+        {:noreply, socket}
+
+      socket_state.status == :working or is_nil(socket_state.validation_status) ->
+        {:noreply, socket}
+
+      true ->
+        Csv2sql.ProgressTracker.reset_state()
+
         {:noreply,
          assign(socket,
-           file_list: [],
-           stage: :waiting,
-           validation_status: nil,
-           timer_set: nil,
-           stats: %{
-             active_workers: 0,
-             worker_count: 0,
-             db_worker_count: 0,
-             cpu_usage: 0,
-             memory_usage: 0,
-             time_spend: 0
-           }
-         )},
-      else: {:noreply, assign(socket, stage: new_stage)}
-  end
-
-  @impl true
-  def handle_info(:tick, %{assigns: assigns} = socket) do
-    case assigns.stage do
-      stage when stage in [:finish, :error] ->
-        {:noreply, assign(socket, timer_set: nil)}
-
-      _ ->
-        Csv2sql.Observer.get_stats()
-        |> case do
-          # Handles genserver get_stats call when work has finished and observer server has shut down
-          nil ->
-            stage = if Csv2sql.ErrorTracker.get_errors() == [], do: :finish, else: :error
-            {:noreply, assign(socket, stage: stage, timer_set: nil)}
-
-          # Updates socket assigns according to observer server stats reports
-          %{
-            start_time: start_time,
-            file_list: file_list,
-            stage: stage,
-            validation_status: validation_status,
-            active_worker_count: active_worker_count
-          } ->
-            file_list =
-              file_list
-              |> Enum.map(fn {_, file_struct} -> file_struct end)
-              |> Enum.sort_by(fn %Csv2sql.File{raw_size: size} -> size end, :desc)
-
-            time_taken =
-              DateTime.utc_now()
-              |> Time.diff(start_time, :millisecond)
-              |> Kernel./(1000)
-              |> Float.round()
-
-            {:noreply,
-             assign(socket,
-               file_list: file_list,
-               stage: stage,
-               validation_status: validation_status,
-               timer_set: Process.send_after(self(), :tick, 200),
-               stats: %{
-                 active_workers: active_worker_count,
-                 worker_count: Application.get_env(:csv2sql, Csv2sql.MainServer)[:worker_count],
-                 db_worker_count:
-                   Application.get_env(:csv2sql, Csv2sql.MainServer)[:db_worker_count],
-                 cpu_usage: :cpu_sup.util() |> Float.round(2),
-                 memory_usage: :erlang.memory(:total) |> Sizeable.filesize(),
-                 time_spend: time_taken
-               }
-             )}
-        end
+           state: %Csv2sql.ProgressTracker.State{
+             status: :init,
+             start_time: nil,
+             validation_status: nil
+           },
+           time_spend: 0,
+           memory_usage: 0,
+           cpu_usage: 0
+         )}
     end
   end
 
   @impl true
-  def handle_params(_unsigned_params, _uri, socket) do
+  def handle_event("page-change", %{"page" => page}, socket) do
+    {:noreply, assign(socket, %{page: page})}
+  end
+
+  @impl true
+  def handle_event("open-modal", %{"modal" => modal}, socket) do
+    {:noreply, assign(socket, :modal, modal)}
+  end
+
+  @impl true
+  def handle_event("close-modal", _attrs, socket) do
+    {:noreply, assign(socket, :modal, false)}
+  end
+
+  @impl true
+  def handle_event("validate-and-save", attrs, socket) do
+    args = Map.get(attrs, "config", %{})
+
+    socket =
+      socket
+      |> assign(
+        page: "config",
+        changeset: Config.changeset(args)
+      )
+      # DB connection checker is expensive and returns result to caller process with delay
+      # so we don't do this validation on changeset level
+      |> db_connection_checker(args)
+      |> update_matching_date_time(attrs)
+
+    {:noreply, socket |> push_event("save-config", %{config: socket.assigns.changeset})}
+  end
+
+  @impl true
+  def handle_event("add-new-" <> field, _attrs, %{assigns: assigns} = socket)
+      when field in ~w[db-attr date-pattern date-time-pattern] do
+    new_field =
+      field
+      |> String.replace("-", "_")
+      |> String.to_atom()
+      |> case do
+        :db_attr -> %DbAttribute{id: Nanoid.generate(), name: "", value: ""}
+        :date_pattern -> %DashBoard.DatePattern{id: Nanoid.generate()}
+        :date_time_pattern -> %DashBoard.DateTimePattern{id: Nanoid.generate()}
+      end
+
+    association = "#{field}s" |> String.replace("-", "_") |> String.to_atom()
+
+    updated_association =
+      assigns.changeset
+      |> Ecto.Changeset.get_field(association, [])
+      |> Enum.concat([new_field])
+
+    updated_changeset =
+      Ecto.Changeset.put_embed(assigns.changeset, association, updated_association)
+
+    {:noreply,
+     socket
+     |> assign(changeset: updated_changeset)
+     |> push_event("scroll-to-bottom", %{id: "#{field}s-container"})}
+  end
+
+  @impl true
+  def handle_event("remove-" <> field, %{"attrid" => attrid}, %{assigns: assigns} = socket)
+      when field in ~w[db-attr date-pattern date-time-pattern] do
+    association = "#{field}s" |> String.replace("-", "_") |> String.to_atom()
+
+    updated_association =
+      assigns.changeset
+      # For relations get_change/2 return the original changeset data with changes applied, fetch_change!/2 returns raw db_config changesets
+      |> Ecto.Changeset.fetch_change!(association)
+      |> Enum.reject(fn embed_changeset ->
+        Ecto.Changeset.get_field(embed_changeset, :id) == attrid
+      end)
+
+    updated_changeset =
+      Ecto.Changeset.put_embed(assigns.changeset, association, updated_association)
+
+    {:noreply,
+     socket
+     |> assign(changeset: updated_changeset)
+     |> update_matching_date_time()}
+  end
+
+  @impl true
+  def handle_info(:finish, socket) do
+    {:noreply, assign(socket, state: Csv2sql.ProgressTracker.get_state())}
+  end
+
+  @impl true
+  def handle_info(:update_state, socket) do
+    state = socket.assigns.state
+
+    time_taken =
+      if is_nil(state.start_time) do
+        0
+      else
+        DateTime.utc_now()
+        |> Time.diff(state.start_time, :millisecond)
+        |> Kernel./(1000)
+        |> Float.round()
+      end
+
+    if state.status in [:init, :working] or is_nil(state.validation_status) do
+      Process.send_after(self(), :update_state, 200)
+    end
+
+    {:noreply,
+     assign(socket,
+       state: Csv2sql.ProgressTracker.get_state(),
+       time_spend: time_taken,
+       cpu_usage: :cpu_sup.util() |> Float.round(2),
+       memory_usage: :erlang.memory(:total) |> Sizeable.filesize()
+     )}
+  end
+
+  @impl true
+  def handle_info(:check_db_connection, %{assigns: assigns} = socket) do
+    with(
+      db_url = create_db_url(assigns.changeset.changes, hide_password: false),
+      true <- not ("NA" == db_url),
+      db_type <- Ecto.Changeset.get_field(assigns.changeset, :db_type),
+      false <- is_nil(db_type),
+      args = %{db_type: db_type, db_url: db_url},
+      resp = ConnectionTest.check_db_connection(self(), args),
+      :ok <- resp
+    ) do
+      socket
+    else
+      {:error, :on_going} ->
+        Process.send_after(self(), :check_db_connection, @debounce_time)
+        socket
+
+      _ ->
+        assign(socket, db_connection_established: false)
+    end
+
     {:noreply, socket}
   end
 
-  def calc_total_progress(file_list) do
-    if file_list == [] do
-      0
-    else
-      {total, current} =
-        Enum.reduce(file_list, {0, 0}, fn %{row_count: row_count, status: status},
-                                          {total, current} ->
-          current =
-            case status do
-              {:insert_data, file_progress} -> current + file_progress
-              :finish -> current + row_count
-              _ -> 0
-            end
+  # DB connection callbacks
+  @impl true
+  def handle_info({:connected, _}, socket),
+    do: {:noreply, assign(socket, db_connection_established: true)}
 
-          {total + row_count, current}
-        end)
+  @impl true
+  def handle_info({:error, _}, %{assigns: assigns} = socket) do
+    {:noreply,
+     assign(
+       socket,
+       changeset:
+         Ecto.Changeset.add_error(assigns.changeset, :db_url, "Could not connect to database"),
+       db_connection_established: false
+     )}
+  end
 
-      Float.round(current / total * 100, 2)
+  @impl true
+  def handle_info({:report_error, reason}, socket) do
+    IO.inspect("Reported Error #{inspect(reason)}")
+    {:noreply, socket}
+  end
+
+  defp render_page(assigns) do
+    case assigns.page do
+      "config" ->
+        ConfigLive.config_page(assigns)
+
+      "start" ->
+        StartLive.start_page(assigns)
+
+      "about" ->
+        AboutLive.about_page(assigns)
     end
+  end
+
+  defp db_connection_checker(%{assigns: assigns} = socket, args) do
+    if db_config_updated?(assigns, args) do
+      if assigns.db_connection_debouncer,
+        do: Process.cancel_timer(assigns.db_connection_debouncer)
+
+      timer_ref = Process.send_after(self(), :check_db_connection, @debounce_time)
+      assign(socket, :db_connection_debouncer, timer_ref)
+    else
+      socket
+    end
+  end
+
+  defp db_config_updated?(%{changeset: changeset}, args) do
+    # TODO: Take into account custom db params
+    Ecto.Changeset.get_field(changeset, :db_type) != Map.get(args, "db_type") ||
+      Ecto.Changeset.get_field(changeset, :db_username) != Map.get(args, "db_username") ||
+      Ecto.Changeset.get_field(changeset, :db_password) != Map.get(args, "db_password") ||
+      Ecto.Changeset.get_field(changeset, :db_host) != Map.get(args, "db_host") ||
+      Ecto.Changeset.get_field(changeset, :db_name) != Map.get(args, "db_name")
+  end
+
+  defp update_matching_date_time(%{assigns: assigns} = socket, attrs \\ %{}) do
+    date_time_sample =
+      get_in(attrs, ["config", "date_time_trial"]) ||
+        Ecto.Changeset.get_field(assigns.changeset, :date_time_trial)
+
+    case match_date_time(assigns.changeset, date_time_sample) do
+      {type, index} ->
+        socket
+        |> assign(matching_date_time: {type, index})
+        |> push_event("scroll-into-view", %{
+          id: "config_#{type}_patterns_#{index}_pattern"
+        })
+
+      false ->
+        assign(socket, matching_date_time: nil)
+    end
+  end
+
+  defp prepare_args(changeset) do
+    config = Ecto.Changeset.apply_changes(changeset)
+
+    %{
+      source_directory: config.source_directory,
+      schema_path: config.schema_path,
+      insert_schema: config.insert_schema,
+      insert_data: config.insert_data,
+      ordered: config.ordered,
+      date_patterns: prepare_date_patterns(config.date_patterns),
+      datetime_patterns: prepare_date_patterns(config.date_time_patterns),
+      schema_infer_chunk_size: config.schema_infer_chunk_size,
+      worker_count: config.worker_count,
+      parse_datetime: config.parse_datetime,
+      remove_illegal_characters: config.remove_illegal_characters,
+      db_type: config.db_type,
+      db_name: config.db_name,
+      db_url: create_db_url(changeset.changes),
+      drop_existing_tables: config.drop_existing_tables,
+      varchar_limit: config.varchar_limit,
+      db_worker_count: config.db_worker_count,
+      insertion_chunk_size: config.insertion_chunk_size,
+      log: config.log
+    }
+  end
+
+  defp prepare_date_patterns(date_patterns) do
+    date_patterns
+    |> Enum.reject(&is_nil(&1.pattern))
+    |> Enum.map(&%{id: &1.id, pattern: &1.pattern})
   end
 end

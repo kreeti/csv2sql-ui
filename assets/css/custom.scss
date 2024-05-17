@@ -1,0 +1,181 @@
+// Varaibles
+$light-grey: #f0f0f0;
+
+.bg-light-grey {
+  background-color: $light-grey !important;
+}
+
+// Disable horizontal scrollbar
+html,
+body {
+  overflow-x: hidden;
+  background: blanchedalmond;
+
+  // Custom scrollbar styles
+  * {
+    scrollbar-width: thin;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 10px !important;
+  }
+}
+
+.csv2sql-logo {
+  display: block;
+  min-width: 80px;
+  margin-top: 1rem;
+
+  img {
+    height: 35px;
+    width: auto;
+    display: block;
+  }
+}
+
+.top-navbar {
+  background-color: #4a4473;
+  display: flex;
+  justify-content: center;
+  height: 70px;
+
+  .nav-header {
+    color: white;
+    font-size: 1rem;
+    font-variant: small-caps;
+    font-weight: bold;
+    margin-top: 1.3rem;
+    margin-left: 0.2rem;
+  }
+}
+
+.custom-navbar {
+  max-width: 100%;
+  font-variant: small-caps;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.grow {
+  transition: all 0.04s ease-in-out;
+}
+
+.grow:hover {
+  transform: scale(1.05);
+}
+
+.tool-tip-wrapper {
+  width: fit-content;
+  position: relative;
+  top: -4px;
+  padding-right: 2px;
+  cursor: pointer;
+}
+
+.mysql-label {
+  position: relative;
+  top: -14px;
+}
+
+.postgres-label {
+  svg {
+    display: block;
+    position: relative;
+    left: 30%;
+  }
+
+  div {
+    font-family: "Roboto", sans-serif;
+    font-size: 1.2rem;
+
+    .inner-text {
+      color: #336791;
+    }
+  }
+}
+
+.add-link {
+  cursor: pointer;
+  margin-top: 20px;
+
+  span {
+    position: relative;
+    top: -4px;
+    color: darkgreen;
+    font-weight: bold;
+    font-style: italic;
+    text-decoration: underline;
+  }
+}
+
+.opacity-transition {
+  transition: opacity 0.25s ease-in-out;
+}
+
+.live-modal {
+  position: absolute;
+  width: 900px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  margin: auto;
+}
+
+.db-connect-check {
+  height: 72px;
+}
+
+.db-url-text {
+  width: 500px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+// Custom scroll bar implementation
+.scrollable-container {
+  padding: 10px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable; // Reserve space for scrollbar to avoid UI shifting when scrollbar appears
+  scrollbar-color: #d4aa70 #e4e4e4; // Works for non-chromium (tested on firfox)
+
+  // Custom Scrollbar css  works only for chromium based browser
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #e4e4e4;
+    border-radius: 100px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 100px;
+    background-color: #d4aa70;
+    box-shadow: inset 2px 2px 5px 0 rgba(#fff, 0.5);
+  }
+}
+
+#db-attrs-container {
+  height: 300px;
+
+  li {
+    display: list-item;
+  }
+
+  .db-attr-index {
+    padding: 2px;
+  }
+}
+
+#date-patterns-container, #date-time-patterns-container {
+  height: 250px;
+}
+
+// Matched Custom Date/DateTime pattern input glow
+.matched-input {
+  border-color: green;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px green;
+}

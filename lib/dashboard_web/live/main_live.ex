@@ -59,7 +59,7 @@ defmodule DashboardWeb.Live.MainLive do
 
         {:noreply, socket}
 
-      socket_state.status == :working or is_nil(socket_state.validation_status) ->
+      socket_state.status in [:working, :imported, :validating] ->
         {:noreply, socket}
 
       true ->
@@ -182,7 +182,7 @@ defmodule DashboardWeb.Live.MainLive do
         |> Float.round()
       end
 
-    if state.status in [:init, :working] or is_nil(state.validation_status) do
+    if state.status in [:init, :working, :imported, :validating] do
       Process.send_after(self(), :update_state, 200)
     end
 

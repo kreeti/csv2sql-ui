@@ -8,7 +8,7 @@ defmodule DashboardWeb.LiveHelpers do
 
   def get_nav_item_attrs(_assigns, _curr_page), do: %{class: "nav-link bg-light-grey"}
 
-  def get_config_item_attrs(status) when status != :working,
+  def get_config_item_attrs(status) when status not in [:working, :imported, :validating],
     do: %{"phx-click" => "page-change", "phx-value-page" => "config"}
 
   def get_config_item_attrs(_status), do: %{}

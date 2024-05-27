@@ -16,18 +16,16 @@ defmodule DashboardWeb.Live.StartLive do
                 Error! check logs
 
               <% true -> %>
-                <%= @state.status %>
+                <%= show_status(@state.status) %>
             <% end %>
           </span>
         </div>
-        <div>
-          <%= if not is_nil(@state.validation_status) do %>
-            <div>
-                <strong> Validation Status: </strong>
-                <span class={"validation-status #{error_status_class(@state.validation_status)}"}><%= @state.validation_status %>!</span>
-            </div>
-          <% end %>
-        </div>
+        <%= if not is_nil(@state.validation_status) do %>
+          <div>
+              <strong> Validation Status: </strong>
+              <span class={"validation-status #{error_status_class(@state.validation_status)}"}><%= @state.validation_status %>!</span>
+          </div>
+        <% end %>
         <%= if @state.status != :init do %>
           <div><strong> Total Files: </strong><%= Enum.count(Map.values(@state.files)) %> </div>
           <div><strong> Files Imported: </strong><%= Enum.count(Map.values(@state.files), fn %{status: status} -> status == :done end) %> </div>
@@ -90,8 +88,9 @@ defmodule DashboardWeb.Live.StartLive do
           <div id="spinnerText">
           <%= cond do %>
             <% @state.status == :init -> %> <span> Start!</span>
-            <% @state.status == :working -> %> <span> Working.. </span>
-            <% @state.status == :finish and @state.validation_status == :passed -> %> <span> Finished!  Reset? </span>
+            <% @state.status in [:working, :imported] -> %> <span> Working.. </span>
+            <% @state.status == :validating -> %> <span> Validating.. </span>
+            <% @state.status == :finish -> %> <span> Finished!  Reset? </span>
             <% true -> %> <span id="error_stage" role="button" phx-click="page-change" phx-value-page="start"> ERROR! Reset?</span>
           <% end %>
           </div>
@@ -110,8 +109,14 @@ defmodule DashboardWeb.Live.StartLive do
   end
 
   defp spinner_loading_class(status) do
-    if status == :working, do: "spinner loading", else: ""
+    if status in [:working, :imported, :validating],
+      do: "spinner loading",
+      else: ""
   end
+
+  defp show_status(:imported), do: :working
+
+  defp show_status(status), do: status
 
   defp button_class(changeset) do
     if not changeset.valid?, do: "button-disabled", else: "button-enabled"

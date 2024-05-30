@@ -10,7 +10,21 @@ defmodule Dashboard.MixProject do
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      name: "Csv2sqlDashboard",
+      description: "Csv2SqlDashboard is a blazing fast fully automated tool to load huge CSV files into a RDBMS.",
+      package: package(),
+      source_url: "https://github.com/kreeti/csv2sql-ui"
+    ]
+  end
+
+  defp package() do
+    [
+      name: "csv2sqldashboard",
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => "https://github.com/kreeti/csv2sql-ui"
+      }
     ]
   end
 
@@ -45,6 +59,7 @@ defmodule Dashboard.MixProject do
       {:phoenix_ecto, "~> 4.4"},
       {:csv2sql, github: "kreeti/csv2sql"},
       {:nanoid, "~> 2.1.0"},
+      {:ex_doc, "~> 0.33.0"},
 
       # Development Deps
       {:phoenix_live_reload, "~> 1.5.3", only: :dev},

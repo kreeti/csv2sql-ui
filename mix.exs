@@ -5,10 +5,6 @@ defmodule Dashboard.MixProject do
     [
       app: :dashboard,
       version: "0.1.0",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
@@ -47,12 +43,12 @@ defmodule Dashboard.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:ecto, "~> 3.11.2"},
       {:phoenix_ecto, "~> 4.4"},
-      {:csv2sql, in_umbrella: true},
+      {:csv2sql, github: "kreeti/csv2sql"},
       {:nanoid, "~> 2.1.0"},
 
       # Development Deps
       {:phoenix_live_reload, "~> 1.5.3", only: :dev},
-      {:dart_sass, "~> 0.2", runtime: Mix.env() == :dev},
+      {:dart_sass, "~> 0.7.0", runtime: Mix.env() == :dev},
       {:esbuild, "~> 0.8.1", runtime: Mix.env() == :dev},
       {:floki, ">= 0.36.1", only: :test}
     ]

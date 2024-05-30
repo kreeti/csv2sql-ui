@@ -57,7 +57,7 @@ defmodule Dashboard.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:ecto, "~> 3.11.2"},
       {:phoenix_ecto, "~> 4.4"},
-      {:csv2sql, github: "kreeti/csv2sql"},
+      {:csv2sql, "~> 0.1.0"},
       {:nanoid, "~> 2.1.0"},
       {:ex_doc, "~> 0.33.0"},
 

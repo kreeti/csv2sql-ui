@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/Arp-G/csv2sql/master/.github/images/csv2sql.png" alt="Csv2Sql image"/>
 </p>
-<h3 align="center"> <i>CSV2SQL-UI - It's a UI for [CSV2SQL](https://github.com/kreeti/csv2sql) </i> </h3>
+<h3 align="center"> <i>CSV2SQL-UI, It's a UI for [CSV2SQL](https://github.com/kreeti/csv2sql) </i> </h3>
 
 ## Table of Contents
 1. [What is Csv2sql-ui ?](#what)
@@ -38,6 +38,7 @@ For ease of use csv2sql has browser interface which can be used to easily config
   <img src="https://github.com/kreeti/csv2sql/assets/69915843/a657f0ba-6364-4658-b572-147f9b1d3700" alt="browser interface demo"/>
 </p>
 
+<a name="sourceinstall"></a>
 ## Running the app from source code
 
 You must have elixir, node.js and mysql/postgresql installed in your system to run Csv2Sql.

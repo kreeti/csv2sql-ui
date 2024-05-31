@@ -3,46 +3,31 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/Arp-G/csv2sql/master/.github/images/csv2sql.png" alt="Csv2Sql image"/>
 </p>
-<h3 align="center"> <i>CSV2SQL - Blazing fast csv to database loader! </i> </h3>
+<h3 align="center"> <i>CSV2SQL-UI is a Frontend app for CSV2SQL </i> </h3>
 
 ## Table of Contents
-1. [What is Csv2sql ?](#what)
-2. [Why Csv2sql ?](#why)
-3. [Using the browser based interface](#dashboard)
-	1. [Installation and usage](#dashboardinstall)
-4. [Running from source](#sourceinstall)
-5. [Supported data types](#support)
-6. [Handling custom date/datetime formats](#datetime)
-7. [Known issues, caveats and troubleshooting](#issues)
-8. [Future plans](#future)
+1. [What is Csv2sql-UI ?](#what)
+2. [Using the browser based interface](#dashboard)
+	1. [Running from source](#sourceinstall)
+3. [Supported data types](#support)
+4. [Handling custom date/datetime formats](#datetime)
+5. [Known issues, caveats and troubleshooting](#issues)
+6. [Future plans](#future)
 
 
 *Please have a quick look over the [Known issues, caveats and troubleshooting](#issues) section before using the app.*
 
 <a name="what"></a>
-## What is Csv2sql?
+## What is Csv2sql-UI?
 
-Csv2Sql is a blazing fast fully automated tool to load huge [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) files into a [RDBMS](https://en.wikipedia.org/wiki/Relational_database).
+Csv2sql-UI is a Frontend application for [CSV2SQL](https://github.com/kreeti/csv2sql), where csv2sql is a blazing fast fully automated tool to load huge [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) files into a [RDBMS](https://en.wikipedia.org/wiki/Relational_database).
 
-Csv2Sql can automatically...
+Csv2sql-UI can automatically...
 
 * Read csv files and infer the database table structure
 * Create the required tables in the database
 * Insert all the csvs into the database
 * Do a simple validation check to ensures that all the data as been imported correctly.
-
-<a name="why"></a>
-## Why Csv2sql ?
-
-* Utilizing the power of modern multi core processors, csv2sql does most of its tasks in **parallel**, this makes it super fast and more efficient than other tools.
-
-* It is **completely automatic**, provide a path with hundreds of csvs having size in gigabytes and start the application, it will handle the rest!
-
-* It comes as **[browser user interface](#dashboard)** and is super easy to configure and use.
-
-* While you can have maximum utilization of your cpu to get excellent performance, csv2sql is fully **customizable**, also comes with [lots of options](#cmdargs) which can be changed to fine tune the application based on requirement and to lower down resource usage and database load.
-
-* Csv2Sql supports **partial operations**, so if you want to only create the tables or insert data from the csvs into already created tables without creating the tables again or create both the tables and also insert the data from csvs, Csv2Sql has got you covered !
 
 <a name="dashboard"></a>
 ## Use csv2sql from your browser
@@ -52,30 +37,6 @@ For ease of use csv2sql has browser interface which can be used to easily config
 <p align="center">
   <img src="https://github.com/kreeti/csv2sql/assets/69915843/a657f0ba-6364-4658-b572-147f9b1d3700" alt="browser interface demo"/>
 </p>
-
-### Installation and usage: <a name="dashboardinstall"></a>
-
-There are no dependencies needed to use the app via your browser, however you must have mysql or postgres installed.
-
-Download the latest release of the app from the releases section in this repository.
-
-You can now easily run the executable on your linux system, by:
-
-* Extract the zip file named `csv2sql_xx`
-* cd into the extracted directory from your terminal: `cd csv2sql_xx`
-* Execute the following command: `./bin/csv2sql_and_dashboard start`
-
-This will run a local server which your access at `localhost:4000` in your browser.
-
-Thats all!
-
-*Please create an issue with details of your OS distribution, architecture(for example, x86_64 or ARM) and ABI (for example, musl or gnu) if the app does not run on your system*
-
-Using the app via the browser is super easy, once the app is running, go to `localhost:4000` in your browser.
-
-Now go to the `Change configuration` tab, and enter the relevant configuration details, hover over any configuration option to see what it does.
-
-Whenever your are done, click on the `Start` tab and click on `Start` button below to start the import process.
 
 <a name="sourceinstall"></a>
 ## Running the app from source code

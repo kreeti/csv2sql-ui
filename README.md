@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/Arp-G/csv2sql/master/.github/images/csv2sql.png" alt="Csv2Sql image"/>
 </p>
-<h3 align="center"> <i>CSV2SQL-UI, It's a UI for [CSV2SQL](https://github.com/kreeti/csv2sql) </i> </h3>
+<h3 align="center"> <i>CSV2SQL-UI, It's a Frontend for CSV2SQL </i> </h3>
 
 ## Table of Contents
 1. [What is Csv2sql-ui ?](#what)

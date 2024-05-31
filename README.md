@@ -3,10 +3,10 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/Arp-G/csv2sql/master/.github/images/csv2sql.png" alt="Csv2Sql image"/>
 </p>
-<h3 align="center"> <i>CSV2SQL-UI, It's a Frontend for CSV2SQL </i> </h3>
+<h3 align="center"> <i>CSV2SQL-UI is a Frontend app for CSV2SQL </i> </h3>
 
 ## Table of Contents
-1. [What is Csv2sql-ui ?](#what)
+1. [What is Csv2sql-UI ?](#what)
 2. [Using the browser based interface](#dashboard)
 	1. [Running from source](#sourceinstall)
 3. [Supported data types](#support)
@@ -18,11 +18,11 @@
 *Please have a quick look over the [Known issues, caveats and troubleshooting](#issues) section before using the app.*
 
 <a name="what"></a>
-## What is Csv2sql-ui?
+## What is Csv2sql-UI?
 
-Csv2sql-ui is a Frontend application for [CSV2SQL](https://github.com/kreeti/csv2sql), where csv2sql is a blazing fast fully automated tool to load huge [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) files into a [RDBMS](https://en.wikipedia.org/wiki/Relational_database).
+Csv2sql-UI is a Frontend application for [CSV2SQL](https://github.com/kreeti/csv2sql), where csv2sql is a blazing fast fully automated tool to load huge [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) files into a [RDBMS](https://en.wikipedia.org/wiki/Relational_database).
 
-Csv2sql-ui can automatically...
+Csv2sql-UI can automatically...
 
 * Read csv files and infer the database table structure
 * Create the required tables in the database

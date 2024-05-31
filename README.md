@@ -80,10 +80,11 @@ Whenever your are done, click on the `Start` tab and click on `Start` button bel
 <a name="sourceinstall"></a>
 ## Running the app from source code
 
-You must have elixir and mysql/postgresql installed in your system to run Csv2Sql.
+You must have elixir, node.js and mysql/postgresql installed in your system to run Csv2Sql.
 
-To use the app just clone this repository and then install dependencies
-by `mix deps.get`
+To use the app just clone this repository 
+1. cd assets and run `npm install`
+2. then install dependencies by `mix deps.get`
 
 Finally, start the application by ```mix phx.server```
 
